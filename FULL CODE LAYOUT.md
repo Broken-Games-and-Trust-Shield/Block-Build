@@ -1,7 +1,3 @@
-Here is the complete split code for your application, followed by a full code layout guide explaining how all the files connect and work together.
-
----
-
 ### File 1: `index.html`
 
 Save this code in a file named `index.html`.
