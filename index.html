@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Block Build</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="crosshair"></div>
+
+  <!-- Start / Controls Overlay -->
+  <div id="overlay">
+    <h1>BLOCK BUILD</h1>
+    <p>Click to Play</p>
+    <p><span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> to move</p>
+    <p><span class="key">Space</span> to jump</p>
+    <p><span class="key">Left Click</span> to destroy block</p>
+    <p><span class="key">Right Click</span> to place block</p>
+    <p><span class="key">1</span> - <span class="key">9</span> or Scroll to select block</p>
+    <p><span class="key">E</span> to open Block Menu</p>
+  </div>
+
+  <!-- Hotbar -->
+  <div id="hotbar"></div>
+
+  <!-- UI Elements -->
+  <button id="newWorldBtn">New World</button>
+  <div id="worldLabel">World: Default</div>
+  <div id="hint">Press ESC to pause / unlock mouse</div>
+  <a id="feedbackBtn" href="#" target="_blank">Feedback</a>
+
+  <!-- Block Selector Menu (Opened with E) -->
+  <div id="blockMenuTitle">Select a Block for Hotbar</div>
+  <div id="blockMenu">
+    <div id="blockMenuGrid"></div>
+  </div>
+
+  <!-- Front-End Menu System Screens -->
+  <div id="bbStart" class="bb-screen">
+    <div class="bb-canvas">
+      <div class="bb-topbar">
+        <div class="bb-title">BLOCK BUILD</div>
+      </div>
+      <div class="bb-menu-stack">
+        <button class="bb-btn" id="btnPlay">Play Game</button>
+        <button class="bb-btn" id="btnWorlds">World Manager</button>
+        <button class="bb-btn" id="btnSettings">Settings</button>
+        <button class="bb-btn" id="btnAbout">About</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Three.js Library & Main Game Script -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
