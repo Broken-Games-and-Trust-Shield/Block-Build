@@ -1,80 +1,118 @@
-### Folder Structure Overview
+### Sound System Overview
 
-Place all audio files inside an `audio/` directory in your project root:
+Web Audio API generates sounds dynamically using code (no external MP3/WAV files required).
 
-```text
-project-root/
-│
-├── audio/
-│   ├── blocks/
-│   │   ├── break_grass.mp3
-│   │   ├── break_stone.mp3
-│   │   ├── break_wood.mp3
-│   │   ├── place_grass.mp3
-│   │   ├── place_stone.mp3
-│   │   └── place_wood.mp3
-│   ├── player/
-│   │   ├── step_grass_1.mp3
-│   │   ├── step_grass_2.mp3
-│   │   ├── step_stone_1.mp3
-│   │   └── jump.mp3
-│   └── ui/
-│       ├── click.mp3
-│       └── select.mp3
-│
-├── index.html
-├── style.css
-└── app.js
-
-```
+* **AudioContext**: Manages the main sound environment and master gain node.
+* **Oscillators & Noise Buffers**: Synthesizes basic wave tones (sine, square) and white noise.
+* **Gain & Filter Nodes**: Controls pitch, volume envelopes (fade-outs), and acoustic frequencies.
 
 ---
 
-### Complete Sound File Manifest
+### Sound Layout & Definitions
 
-#### 1. Block Actions (`audio/blocks/`)
-
-* **`break_grass.mp3`**: Plays when destroying dirt, grass, or plant blocks.
-* **`break_stone.mp3`**: Plays when breaking stone, cobblestone, or brick blocks.
-* **`break_wood.mp3`**: Plays when destroying wood logs or plank blocks.
-* **`place_grass.mp3`**: Soft placement sound for soil and foliage.
-* **`place_stone.mp3`**: Heavy click sound for stone-based blocks.
-* **`place_wood.mp3`**: Medium impact sound for wooden blocks.
-
-#### 2. Player Movement (`audio/player/`)
-
-* **`step_grass_1.mp3`**: Alternating footstep sound 1 for walking on grass.
-* **`step_grass_2.mp3`**: Alternating footstep sound 2 for walking on grass.
-* **`step_stone_1.mp3`**: Hard footstep sound for stone surfaces.
-* **`jump.mp3`**: Quick impulse/whoosh sound triggered on player jump (`Space`).
-
-#### 3. User Interface (`audio/ui/`)
-
-* **`click.mp3`**: Button click sound for front-end menu and screen navigation.
-* **`select.mp3`**: Lightweight tick sound when scrolling or changing active hotbar slots (`1–9`).
+| Event | Waveform / Type | Frequency / Pitch | Purpose |
+| --- | --- | --- | --- |
+| **Block Place** | Square Wave | $150\text{ Hz} \rightarrow 80\text{ Hz}$ | Quick low-pitch thud |
+| **Block Destroy** | Noise Buffer + Filter | Bandpass Filter ($800\text{ Hz}$) | Crunchy breaking effect |
+| **Player Jump** | Sine Wave | $180\text{ Hz} \rightarrow 350\text{ Hz}$ | Rising sweep |
+| **Footstep** | Low Noise Pulse | Lowpass Filter ($400\text{ Hz}$) | Soft, short impact |
 
 ---
 
-### How to Load Sounds in `app.js`
+### Audio Code Implementation
 
-You can pre-load these audio files using Web Audio or standard HTML5 `Audio` objects in JavaScript:
+Add this sound controller script to `app.js` or include it as a separate module:
 
 ```javascript
-// Sound Effect Registry
-const sounds = {
-  breakStone: new Audio('audio/blocks/break_stone.mp3'),
-  placeStone: new Audio('audio/blocks/place_stone.mp3'),
-  click: new Audio('audio/ui/click.mp3'),
-  select: new Audio('audio/ui/select.mp3')
-};
+// Sound Controller using Web Audio API
+class SoundManager {
+  constructor() {
+    this.ctx = null;
+  }
 
-// Function to play sound with overlapping support
-function playSound(name) {
-  if (sounds[name]) {
-    const soundClone = sounds[name].cloneNode();
-    soundClone.volume = 0.5;
-    soundClone.play().catch(() => {}); // Catches browser autoplay restrictions
+  // AudioContext must be initialized after a user interaction
+  init() {
+    if (!this.ctx) {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+  }
+
+  // Play a synthesized block placement sound (quick low thud)
+  playPlace() {
+    this.init();
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.08);
+
+    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.08);
+  }
+
+  // Play a synthesized block destroy sound (filtered noise)
+  playDestroy() {
+    this.init();
+    const bufferSize = this.ctx.sampleRate * 0.1; // 100ms noise
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 800;
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    noise.start();
+  }
+
+  // Play jump sound (rising frequency sweep)
+  playJump() {
+    this.init();
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(350, this.ctx.currentTime + 0.15);
+
+    gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.15);
   }
 }
+
+const sounds = new SoundManager();
+
+// Example Trigger Usage:
+// document.addEventListener('mousedown', (e) => {
+//   if (e.button === 0) sounds.playDestroy(); // Left Click
+//   if (e.button === 2) sounds.playPlace();   // Right Click
+// });
 
 ```
