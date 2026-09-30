@@ -1,58 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Block Build</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Block Build</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <div id="crosshair"></div>
 
-  <!-- Start / Controls Overlay -->
   <div id="overlay">
     <h1>BLOCK BUILD</h1>
-    <p>Click to Play</p>
-    <p><span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> to move</p>
-    <p><span class="key">Space</span> to jump</p>
-    <p><span class="key">Left Click</span> to destroy block</p>
-    <p><span class="key">Right Click</span> to place block</p>
-    <p><span class="key">1</span> - <span class="key">9</span> or Scroll to select block</p>
-    <p><span class="key">E</span> to open Block Menu</p>
+    <p>Click anywhere to start</p>
+    <p><span class="key">WASD</span> Move | <span class="key">Space</span> Jump | <span class="key">Shift</span> Fly Down</p>
+    <p><span class="key">Left Click</span> Destroy | <span class="key">Right Click</span> Place</p>
+    <p><span class="key">1-9</span> / <span class="key">Scroll</span> Select Block | <span class="key">E</span> Inventory</p>
   </div>
 
-  <!-- Hotbar -->
-  <div id="hotbar"></div>
-
-  <!-- UI Elements -->
+  <div id="hint">Press E to open Block Menu</div>
   <button id="newWorldBtn">New World</button>
   <div id="worldLabel">World: Default</div>
-  <div id="hint">Press ESC to pause / unlock mouse</div>
-  <a id="feedbackBtn" href="#" target="_blank">Feedback</a>
+  <a id="feedbackBtn" href="#">Feedback</a>
 
-  <!-- Block Selector Menu (Opened with E) -->
-  <div id="blockMenuTitle">Select a Block for Hotbar</div>
+  <!-- Hotbar -->
+  <div id="hotbar">
+    <div class="slot selected" data-slot="0"><span class="num">1</span><div class="swatch" style="background:#8b5a2b;"></div><span class="name">Dirt</span></div>
+    <div class="slot" data-slot="1"><span class="num">2</span><div class="swatch" style="background:#2e8b57;"></div><span class="name">Grass</span></div>
+    <div class="slot" data-slot="2"><span class="num">3</span><div class="swatch" style="background:#808080;"></div><span class="name">Stone</span></div>
+    <div class="slot" data-slot="3"><span class="num">4</span><div class="swatch" style="background:#a0522d;"></div><span class="name">Wood</span></div>
+    <div class="slot" data-slot="4"><span class="num">5</span><div class="swatch" style="background:#228b22;"></div><span class="name">Leaves</span></div>
+    <div class="slot" data-slot="5"><span class="num">6</span><div class="swatch" style="background:#b22222;"></div><span class="name">Brick</span></div>
+    <div class="slot" data-slot="6"><span class="num">7</span><div class="swatch" style="background:#ffd700;"></div><span class="name">Sand</span></div>
+    <div class="slot" data-slot="7"><span class="num">8</span><div class="swatch" style="background:#4682b4;"></div><span class="name">Glass</span></div>
+    <div class="slot" data-slot="8"><span class="num">9</span><div class="swatch" style="background:#ff69b4;"></div><span class="name">Planks</span></div>
+  </div>
+
+  <!-- Block Selector Menu -->
+  <div id="blockMenuTitle">SELECT A BLOCK FOR YOUR HOTBAR</div>
   <div id="blockMenu">
     <div id="blockMenuGrid"></div>
   </div>
 
-  <!-- Front-End Menu System Screens -->
-  <div id="bbStart" class="bb-screen">
+  <!-- Front-End Menu System -->
+  <div id="bbStart" class="bb-screen bb-open">
     <div class="bb-canvas">
       <div class="bb-topbar">
         <div class="bb-title">BLOCK BUILD</div>
       </div>
+      <div class="bb-panel bb-tagline">
+        Build, explore, and create in your browser.
+      </div>
       <div class="bb-menu-stack">
-        <button class="bb-btn" id="btnPlay">Play Game</button>
-        <button class="bb-btn" id="btnWorlds">World Manager</button>
-        <button class="bb-btn" id="btnSettings">Settings</button>
-        <button class="bb-btn" id="btnAbout">About</button>
+        <button class="bb-btn" id="bbPlayBtn">Play Game</button>
+        <button class="bb-btn" id="bbWorldsBtn">World Manager</button>
+        <button class="bb-btn" id="bbSettingsBtn">Settings</button>
+        <button class="bb-btn" id="bbAboutBtn">About</button>
       </div>
     </div>
   </div>
 
-  <!-- Three.js Library & Main Game Script -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- World Manager Screen -->
+  <div id="bbWorlds" class="bb-screen">
+    <div class="bb-canvas">
+      <div class="bb-topbar">
+        <div class="bb-title">WORLDS</div>
+        <button class="bb-btn bb-btn-back" onclick="showScreen('bbStart')">Back</button>
+      </div>
+      <div id="bbWorldList"></div>
+      <button class="bb-btn" id="bbCreateWorldBtn">+ Create World</button>
+    </div>
+  </div>
+
+  <!-- Settings Screen -->
+  <div id="bbSettings" class="bb-screen">
+    <div class="bb-canvas">
+      <div class="bb-topbar">
+        <div class="bb-title">SETTINGS</div>
+        <button class="bb-btn bb-btn-back" onclick="showScreen('bbStart')">Back</button>
+      </div>
+      <div class="bb-section-title">Controls</div>
+      <div class="bb-panel bb-settings-grid">
+        <div class="bb-slider-card">
+          <div class="bb-slider-head">
+            <span>Mouse Sensitivity</span>
+            <span id="bbSensVal">1.0</span>
+          </div>
+          <input type="range" id="bbSensSlider" min="0.1" max="3.0" step="0.1" value="1.0">
+        </div>
+        <div class="bb-slider-card">
+          <div class="bb-slider-head">
+            <span>Field of View (FOV)</span>
+            <span id="bbFovVal">75</span>
+          </div>
+          <input type="range" id="bbFovSlider" min="60" max="110" step="1" value="75">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- About Screen -->
+  <div id="bbAbout" class="bb-screen">
+    <div class="bb-canvas">
+      <div class="bb-topbar">
+        <div class="bb-title">ABOUT</div>
+        <button class="bb-btn bb-btn-back" onclick="showScreen('bbStart')">Back</button>
+      </div>
+      <div class="bb-panel bb-about-text">
+        Block Build is a lightweight 3D browser game built using web technologies.
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <div id="bbRenameModal">
+    <div class="bb-panel">
+      <h3>Rename World</h3>
+      <input type="text" id="bbRenameInput" placeholder="New Name">
+      <div style="display:flex; gap:10px; justify-content:flex-end;">
+        <button class="bb-btn bb-btn-sm" id="bbRenameSaveBtn">Save</button>
+        <button class="bb-btn bb-btn-sm" onclick="closeModals()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="bbDeleteConfirmModal">
+    <div class="bb-panel">
+      <h3>Delete World?</h3>
+      <p>This action cannot be undone.</p>
+      <div style="display:flex; gap:10px; justify-content:center;">
+        <button class="bb-btn bb-btn-sm" id="bbDeleteConfirmBtn" style="background:linear-gradient(#a33,#722);">Delete</button>
+        <button class="bb-btn bb-btn-sm" onclick="closeModals()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
