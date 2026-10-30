@@ -1,4 +1,3 @@
-###Full Code Layout
 
 ### Part 1: HTML Structure (`index.html`)
 
