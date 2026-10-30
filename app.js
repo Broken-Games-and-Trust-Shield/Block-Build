@@ -1,78 +1,86 @@
-// Navigation Screen Management
-function showScreen(screenId) {
-  const screens = document.querySelectorAll('.bb-screen');
-  screens.forEach(screen => screen.classList.remove('bb-open'));
-  
-  const target = document.getElementById(screenId);
-  if (target) {
-    target.classList.add('bb-open');
-  }
+// Game State & Configuration
+const state = {
+    isPaused: true,
+    activeSlot: 0,
+    inventory: ['grass', 'dirt', 'stone', 'wood', 'leaves', 'brick', 'sand', 'glass', 'planks'],
+    selectedBlock: 'grass'
+};
+
+// DOM References
+const canvas = document.getElementById('gameCanvas');
+const overlay = document.getElementById('overlay');
+const startBtn = document.getElementById('startBtn');
+const blockMenu = document.getElementById('blockMenu');
+const closeBlockMenu = document.getElementById('closeBlockMenu');
+const hotbarSlots = document.querySelectorAll('#hotbar .slot');
+
+// Pointer Lock & Pause Handler
+function requestLock() {
+    canvas.requestPointerLock();
 }
 
-// Modal Control
-function closeModals() {
-  document.getElementById('bbRenameModal').classList.remove('bb-open');
-  document.getElementById('bbDeleteConfirmModal').classList.remove('bb-open');
-}
-
-// UI Event Handlers
-document.addEventListener('DOMContentLoaded', () => {
-  // Navigation Buttons
-  document.getElementById('bbPlayBtn')?.addEventListener('click', () => {
-    showScreen(''); // Hide all UI screens to show the game overlay/canvas
-    document.getElementById('overlay').style.display = 'flex';
-  });
-
-  document.getElementById('bbWorldsBtn')?.addEventListener('click', () => showScreen('bbWorlds'));
-  document.getElementById('bbSettingsBtn')?.addEventListener('click', () => showScreen('bbSettings'));
-  document.getElementById('bbAboutBtn')?.addEventListener('click', () => showScreen('bbAbout'));
-
-  // Overlay Click to Enter Pointer Lock
-  const overlay = document.getElementById('overlay');
-  overlay?.addEventListener('click', () => {
-    overlay.style.display = 'none';
-  });
-
-  // Settings Sliders
-  const sensSlider = document.getElementById('bbSensSlider');
-  const sensVal = document.getElementById('bbSensVal');
-  sensSlider?.addEventListener('input', (e) => {
-    sensVal.textContent = e.target.value;
-  });
-
-  const fovSlider = document.getElementById('bbFovSlider');
-  const fovVal = document.getElementById('bbFovVal');
-  fovSlider?.addEventListener('input', (e) => {
-    fovVal.textContent = e.target.value;
-  });
-
-  // Hotbar Selection Handling
-  const slots = document.querySelectorAll('#hotbar .slot');
-  slots.forEach(slot => {
-    slot.addEventListener('click', () => {
-      slots.forEach(s => s.classList.remove('selected'));
-      slot.classList.add('selected');
-    });
-  });
-
-  // Keyboard Navigation for Inventory / Hotbar
-  window.addEventListener('keydown', (e) => {
-    if (e.key >= '1' && e.key <= '9') {
-      const index = parseInt(e.key) - 1;
-      if (slots[index]) {
-        slots.forEach(s => s.classList.remove('selected'));
-        slots[index].classList.add('selected');
-      }
-    }
-
-    if (e.key.toLowerCase() === 'e') {
-      const menu = document.getElementById('blockMenu');
-      const title = document.getElementById('blockMenuTitle');
-      if (menu && title) {
-        const isOpen = menu.style.display === 'flex';
-        menu.style.display = isOpen ? 'none' : 'flex';
-        title.style.display = isOpen ? 'none' : 'block';
-      }
-    }
-  });
+startBtn.addEventListener('click', () => {
+    requestLock();
 });
+
+document.addEventListener('pointerlockchange', () => {
+    if (document.pointerLockElement === canvas) {
+        state.isPaused = false;
+        overlay.classList.add('hidden');
+    } else {
+        state.isPaused = true;
+        overlay.classList.remove('hidden');
+    }
+});
+
+// Input Handling
+window.addEventListener('keydown', (e) => {
+    // Hotbar selection (Keys 1-9)
+    if (e.key >= '1' && e.key <= '9') {
+        const index = parseInt(e.key) - 1;
+        selectHotbarSlot(index);
+    }
+    
+    // Toggle Inventory Menu (E or B)
+    if ((e.key.toLowerCase() === 'e' || e.key.toLowerCase() === 'b') && !state.isPaused) {
+        blockMenu.classList.toggle('hidden');
+    }
+});
+
+// Mouse Scroll Hotbar Navigation
+window.addEventListener('wheel', (e) => {
+    if (state.isPaused) return;
+    if (e.deltaY > 0) {
+        selectHotbarSlot((state.activeSlot + 1) % 9);
+    } else {
+        selectHotbarSlot((state.activeSlot - 1 + 9) % 9);
+    }
+});
+
+// Select Hotbar Slot
+function selectHotbarSlot(index) {
+    hotbarSlots[state.activeSlot].classList.remove('selected');
+    state.activeSlot = index;
+    hotbarSlots[state.activeSlot].classList.add('selected');
+    state.selectedBlock = state.inventory[index];
+}
+
+// Slot Click Listeners
+hotbarSlots.forEach((slot, idx) => {
+    slot.addEventListener('click', () => selectHotbarSlot(idx));
+});
+
+closeBlockMenu.addEventListener('click', () => {
+    blockMenu.classList.add('hidden');
+});
+
+// Primary Game Loop (Rendering & Controls Placeholder)
+function gameLoop() {
+    if (!state.isPaused) {
+        // Update physics, camera rotation, and block rendering here
+    }
+    requestAnimationFrame(gameLoop);
+}
+
+// Start Main Loop
+requestAnimationFrame(gameLoop);
